@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require "birdwatcher"
+require "readline"
+
+trap "SIGINT" do
+  print "\n"
+  Birdwatcher::Console.instance.warn("Caught interrupt; Exiting.")
+  exit
+end
+
+Birdwatcher::Console.instance.start!

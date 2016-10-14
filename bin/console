@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "birdwatcher"
+
+# You can add fixtures and/or initialization code here to make experimenting
+# with your gem easier. You can also use a different console, if you like.
+
+# (If you use this, don't forget to add pry to your Gemfile!)
+# require "pry"
+# Pry.start
+
+begin
+  Sequel.extension :migration, :core_extensions
+  DB = Sequel.connect(Birdwatcher::Configuration.get!(:database_connection_uri))
+  Sequel::Model.db = DB
+  Sequel::Model.plugin :timestamps
+  Dir[File.expand_path(File.join(File.dirname(__FILE__), "..", "models", "*.rb"))].each do |file|
+    require file
+  end
+rescue Birdwatcher::Configuration::UnknownKey
+  puts "WARNING: Database connection has not been configured"
+  puts "Sequel and models will not work."
+rescue => e
+  puts "ERROR: An exception was raised when setting up Sequel: #{e.class}: #{e.message}"
+  puts "Sequel and models will not work."
+end
+
+def twitter_client
+  keypair = Birdwatcher::Configuration.get!(:twitter).sample
+  Twitter::REST::Client.new do |config|
+    config.consumer_key    = keypair["consumer_key"]
+    config.consumer_secret = keypair["consumer_secret"]
+  end
+rescue Birdwatcher::Configuration::UnknownKey
+  puts "ERROR: Birdwatcher has not been configured with any Twitter keys"
+end
+
+require "irb"
+require "awesome_print"
+AwesomePrint.irb!
+IRB.start
