@@ -1,5 +1,7 @@
 module Birdwatcher
   module Util
+    HUMAN_PREFIXES = %w(TB GB MB KB B).freeze
+
     def self.time_ago_in_words(time)
       return "a very very long time ago" if time.year < 1800
       secs = Time.now - time
@@ -59,6 +61,16 @@ module Birdwatcher
       text = text.gsub(/\s/, " ").split(" ").map(&:strip).join(" ")
       return text if text.length < max_length
       text[0..max_length] + omission
+    end
+
+    def self.number_to_human_size(number)
+      s = number.to_f
+      i = HUMAN_PREFIXES.length - 1
+      while s > 512 && i > 0
+        i -= 1
+        s /= 1024
+      end
+      ((s > 9 || s.modulo(1) < 0.1 ? "%d" : "%.1f") % s) + HUMAN_PREFIXES[i]
     end
 
     def self.suppress_output(&block)

@@ -114,6 +114,25 @@ module Birdwatcher
         Birdwatcher::Util.excerpt(text, max_length, omission)
       end
 
+      # Create a more human readable representation of a number
+      #
+      # @param number [Numeric] number to make human readable
+      #
+      # @example
+      #     number_to_human_size(1024)
+      #     #=> "1KB"
+      #
+      #     number_to_human_size(2097152)
+      #     #=> "2MB"
+      #
+      #     number_to_human_size(3650722201)
+      #     #=> "3.4GB"
+      #
+      # @return [String] Human readable number
+      def number_to_human_size(number)
+        Birdwatcher::Util.number_to_human_size(number)
+      end
+
       # Suppress any potential output to STDOUT
       #
       # Used in cases where certain libraries or methods might output unwanted
