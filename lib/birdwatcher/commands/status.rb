@@ -66,13 +66,13 @@ USAGE
       end
 
       def search_statuses
-        search_term = arguments[1..-1].join(" ")
+        search_term = arguments[1..-1].join(" ").downcase
         if search_term.empty?
           error("You must provide a search term")
           return false
         end
         statuses = current_workspace.statuses_dataset
-          .where("text LIKE ?", "%#{search_term}%")
+          .where("lower(text) LIKE ?", "%#{search_term}%")
           .order(Sequel.desc(:posted_at))
           .eager(:user)
           .limit(1000)
