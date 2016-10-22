@@ -80,11 +80,11 @@ INFO
           if option_setting("RETRY_FAILED")
             urls = current_workspace.urls_dataset
               .where("crawled_at IS NULL or (crawled_at IS NOT NULL AND http_status IS NULL)")
-              .order(Sequel.desc(:created_at))
+              .order(Sequel.desc(:posted_at))
           else
             urls = current_workspace.urls_dataset
               .where(:crawled_at => nil)
-              .order(Sequel.desc(:created_at))
+              .order(Sequel.desc(:posted_at))
           end
           if urls.empty?
             error("There are currently no URLs in this workspace")

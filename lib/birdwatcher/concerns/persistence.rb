@@ -61,7 +61,7 @@ module Birdwatcher
         if status.urls?
           status.urls.each do |url|
             expanded_url = Birdwatcher::Util.strip_control_characters(url.expanded_url.to_s)
-            db_url = current_workspace.urls_dataset.first(:url => expanded_url) || current_workspace.add_url(:url => expanded_url)
+            db_url = current_workspace.urls_dataset.first(:url => expanded_url) || current_workspace.add_url(:url => expanded_url, :posted_at => status.created_at)
             db_status.add_url(db_url)
           end
         end
