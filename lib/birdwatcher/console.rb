@@ -3,8 +3,10 @@ module Birdwatcher
     include Singleton
 
     DEFAULT_AUTO_COMPLETION_STRINGS = [].freeze
-    DB_MIGRATIONS_PATH = File.expand_path("../../../db/migrations", __FILE__).freeze
-    LINE_SEPARATOR = ("=" * 80).freeze
+    DB_MIGRATIONS_PATH              = File.expand_path("../../../db/migrations", __FILE__).freeze
+    LINE_SEPARATOR                  = ("=" * 80).freeze
+    HISTORY_FILE_NAME               = ".birdwatcher_history".freeze
+    HISTORY_FILE_LOCATION           = File.join(Dir.home, HISTORY_FILE_NAME).freeze
 
     attr_accessor :current_workspace, :current_module
     attr_reader :database
@@ -21,6 +23,7 @@ module Birdwatcher
         Birdwatcher::Console.instance.auto_completion_strings.grep(/\A#{Regexp.escape(s)}/) + Dir["#{expanded_s}*"].grep(/^#{Regexp.escape(expanded_s)}/)
       end
       Readline.completion_append_character = ""
+      load_command_history
       while input = Readline.readline(prompt_line, true)
         input = input.to_s.strip
         handle_input(input) unless input.empty?
@@ -29,6 +32,7 @@ module Birdwatcher
 
     def handle_input(input)
       input.strip!
+      save_command_to_history(input)
       command_name, argument_line = input.split(" ", 2).map(&:strip)
       command_name.downcase
       commands.each do |command|
@@ -196,6 +200,28 @@ module Birdwatcher
         clients << Birdwatcher::KloutClient.new(key)
       end
       clients
+    end
+
+    def load_command_history
+      if File.exist?(HISTORY_FILE_LOCATION)
+        if File.readable?(HISTORY_FILE_LOCATION)
+          File.open(HISTORY_FILE_LOCATION).each_line do |command|
+            Readline::HISTORY << command.strip
+          end
+        else
+          warn("Cannot load command history: #{HISTORY_FILE_LOCATION} is not readable")
+        end
+      end
+    end
+
+    def save_command_to_history(command)
+      if File.exist?(HISTORY_FILE_LOCATION) && !File.writable?(HISTORY_FILE_LOCATION)
+        warn("Cannot save command to history: #{HISTORY_FILE_LOCATION} is not writable")
+        return
+      end
+      File.open(HISTORY_FILE_LOCATION, "a") do |file|
+        file.puts(command)
+      end
     end
   end
 end
