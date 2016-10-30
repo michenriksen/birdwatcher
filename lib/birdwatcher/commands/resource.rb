@@ -16,7 +16,7 @@ can be very convenient for common or repetitive workflows.
 #{'USAGE:'.bold}
 
 #{'Execute commands from a resource file:'.bold}
-  resource <FILE>
+  resource FILE
 USAGE
       end
 

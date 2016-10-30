@@ -114,8 +114,7 @@ module Birdwatcher
       # If the text is long, it will be automatically paged with the system's
       # currently configured pager command (usually `less`).
       def page_text(text)
-        ::TTY::Pager::SystemPager.new.page(text)
-      rescue Errno::EPIPE
+        Birdwatcher::Console.instance.page_text(text)
       end
     end
   end

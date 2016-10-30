@@ -8,11 +8,12 @@ module Birdwatcher
     HISTORY_FILE_NAME               = ".birdwatcher_history".freeze
     HISTORY_FILE_LOCATION           = File.join(Dir.home, HISTORY_FILE_NAME).freeze
 
-    attr_accessor :current_workspace, :current_module
+    attr_accessor :current_workspace, :current_module, :spool
     attr_reader :database
 
     def initialize
       @output_mutex = Mutex.new
+      @spool_mutex  = Mutex.new
     end
 
     def start!
@@ -25,6 +26,7 @@ module Birdwatcher
       Readline.completion_append_character = ""
       load_command_history
       while input = Readline.readline(prompt_line, true)
+        save_to_spool(prompt_line)
         input = input.to_s.strip
         handle_input(input) unless input.empty?
       end
@@ -33,6 +35,7 @@ module Birdwatcher
     def handle_input(input)
       input.strip!
       save_command_to_history(input)
+      save_to_spool("#{input}\n")
       command_name, argument_line = input.split(" ", 2).map(&:strip)
       command_name.downcase
       commands.each do |command|
@@ -56,14 +59,15 @@ module Birdwatcher
     def output(data, newline = true)
       data = "#{data}\n" if newline
       with_output_mutex { print data }
+      save_to_spool(data)
     end
 
     def output_formatted(*args)
-      with_output_mutex { printf(*args) }
+      output(sprintf(*args), false)
     end
 
     def newline
-      with_output_mutex { puts }
+      output ""
     end
 
     def line_separator
@@ -94,6 +98,24 @@ module Birdwatcher
 
     def fatal(message)
       output "[-]".white.bold.on_red + " #{message}"
+    end
+
+    def confirm(question)
+      question = "#{question} (y/n) "
+      save_to_spool(question)
+      if HighLine.agree("#{question}")
+        save_to_spool("y\n")
+        true
+      else
+        save_to_spool("n\n")
+        false
+      end
+    end
+
+    def page_text(text)
+      save_to_spool(text)
+      ::TTY::Pager::SystemPager.new.page(text)
+    rescue Errno::EPIPE
     end
 
     def twitter_client
@@ -183,6 +205,10 @@ module Birdwatcher
       @output_mutex.synchronize { yield }
     end
 
+    def with_spool_mutex
+      @spool_mutex.synchronize { yield }
+    end
+
     def create_twitter_clients!
       clients = []
       configuration.get!(:twitter).each do |keypair|
@@ -222,6 +248,16 @@ module Birdwatcher
       File.open(HISTORY_FILE_LOCATION, "a") do |file|
         file.puts(command)
       end
+    end
+
+    def save_to_spool(string)
+      return unless spool_enabled?
+      string = string.to_s.uncolorize
+      with_spool_mutex { self.spool.write(string) }
+    end
+
+    def spool_enabled?
+      self.spool && self.spool.is_a?(File)
     end
   end
 end

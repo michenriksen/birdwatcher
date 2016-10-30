@@ -107,7 +107,7 @@ module Birdwatcher
       #      0 / 0
       #    end
       def confirm(question)
-        HighLine.agree("#{question} (y/n) ")
+        Birdwatcher::Console.instance.confirm(question)
       end
     end
   end
