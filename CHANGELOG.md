@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - New `spool` command to spool console input and output to a file
 - Write command history to `~/.birdwatcher_history` and load history on startup
-  for persistant command history
+  for persistent command history
 
 ## [0.3.1]
 ### Added
