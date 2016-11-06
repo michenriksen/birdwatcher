@@ -85,6 +85,7 @@ module Birdwatcher
     rescue => e
       output " failed".bold.light_red
       error "#{e.class}: ".bold + e.message
+      e.backtrace.each { |l| error l } if debugging_enabled?
       exit(1) if fatal
     end
 
@@ -258,6 +259,10 @@ module Birdwatcher
 
     def spool_enabled?
       self.spool && self.spool.is_a?(File)
+    end
+
+    def debugging_enabled?
+      ENV.key?("BIRDWATCHER_DEBUG")
     end
   end
 end

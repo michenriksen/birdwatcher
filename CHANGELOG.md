@@ -7,6 +7,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - New `spool` command to spool console input and output to a file
 - Write command history to `~/.birdwatcher_history` and load history on startup
   for persistent command history
+- New module `statuses/word_list` to generate a simple word list from statuses
+- Introduced new `Birdwatcher::WordList` class to process text into a word list
+
+### Changed
+- Refactored `statuses/word_cloud` module to use new `Birdwatcher::WordList` class
 
 ## [0.3.1]
 ### Added

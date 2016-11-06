@@ -11,6 +11,7 @@ module Birdwatcher
     include Birdwatcher::Concerns::Presentation
     include Birdwatcher::Concerns::Persistence
     include Birdwatcher::Concerns::Concurrency
+    include Birdwatcher::Concerns::WordList
 
     # Path to modules directory
     # @private

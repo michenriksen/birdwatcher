@@ -1,10 +1,10 @@
 module Birdwatcher
   module Modules
     module Statuses
-      class WordCloud < Birdwatcher::Module
+      class Wordlist < Birdwatcher::Module
         self.meta = {
-          :name        => "Word Cloud",
-          :description => "Generates a word cloud from statuses",
+          :name        => "Word List",
+          :description => "Generates a word list from statuses",
           :author      => "Michael Henriksen <michenriksen@neomailbox.ch>",
           :options     => {
             "DEST" => {
@@ -17,23 +17,13 @@ module Birdwatcher
               :description => "Space-separated list of screen names (all users if empty)",
               :required    => false
             },
-            "SINCE" => {
-              :value       => nil,
-              :description => "Process statuses posted since specified time (last 7 days if empty)",
-              :required    => false
-            },
-            "BEFORE" => {
-              :value       => nil,
-              :description => "Process statuses posted before specified time (from now if empty)",
-              :required    => false
-            },
             "MIN_WORD_COUNT" => {
               :value       => 3,
               :description => "Exclude words mentioned fewer times than specified",
               :required    => false
             },
             "MIN_WORD_LENGTH" => {
-              :value       => 3,
+              :value       => 6,
               :description => "Exclude words smaller than specified",
               :required    => false
             },
@@ -55,7 +45,7 @@ module Birdwatcher
               :required    => false
             },
             "EXCLUDE_HASHTAGS" => {
-              :value       => false,
+              :value       => true,
               :description => "Exclude Hashtags",
               :required    => false,
               :boolean     => true
@@ -73,60 +63,37 @@ module Birdwatcher
               :boolean     => true
             },
             "WORD_CAP" => {
-              :value       => 200,
+              :value       => nil,
               :description => "Cap list of words to specified amount",
               :required    => false
             },
-            "PALETTE" => {
-              :value       => "#8F99AB #A3ADC2 #272A2F #474C55 #3D4148 #021121 #293642 #516982 #516982 #415569",
-              :description => "Space-separated list of hex color codes to use for word cloud",
-              :required    => true
-            },
-            "IMAGE_WIDTH" => {
-              :value       => 1024,
-              :description => "Image width in pixels",
-              :required    => true
-            },
-            "IMAGE_HEIGHT" => {
-              :value       => 1024,
-              :description => "Image height in pixels",
-              :required    => true
-            },
+            "INCLUDE_COUNT" => {
+              :value => false,
+              :description => "Include the count with the words",
+              :required => false,
+              :boolean => true
+            }
           }
         }
 
         def self.info
 <<-INFO
-The Word Cloud module can generate a classic weighted word cloud from words used
-in statuses across all or specific users and between different times.
+The Word List module can generate a simple word list or dictionary from words
+used in statuses across all or specific users.
 
-The module is heavily configurable; have a look at the options with #{'show options'.bold}
-
-Please note that configuring the module with a long timespan might result in a
-very long execution time when the word cloud image is generated.
-
-The generated image will be in PNG format.
+Since users Tweet about their hobbies, interests, work, etc. generating a word
+list from statuses can be very effective for password cracking.
 INFO
         end
 
         def run
           if option_setting("USERS")
-            user_ids = current_workspace.users_dataset.where("screen_name IN ?", option_setting("USERS").split(" ").map(&:strip)).map(&:id)
-            statuses = current_workspace.statuses_dataset.where("user_id IN ?", user_ids)
+            screen_names = option_setting("USERS").split(" ").map(&:strip)
+            user_ids     = current_workspace.users_dataset.where("screen_name IN ?", screen_names).map(&:id)
+            statuses     = current_workspace.statuses_dataset.where("user_id IN ?", user_ids)
           else
             statuses = current_workspace.statuses_dataset
           end
-          if option_setting("SINCE")
-            since = parse_time(option_setting("SINCE")).strftime("%Y-%m-%d")
-          else
-            since = (Date.today - 7).strftime("%Y-%m-%d")
-          end
-          if option_setting("BEFORE")
-            before = parse_time(option_setting("BEFORE")).strftime("%Y-%m-%d")
-          else
-            before = Time.now.strftime("%Y-%m-%d")
-          end
-          statuses = statuses.where("DATE(posted_at) >= DATE(?) AND DATE(posted_at) <= DATE(?)", since, before).all
           if statuses.count.zero?
             error("There are no statuses to process")
             return false
@@ -157,14 +124,20 @@ INFO
             end
             word_list.process
           end
-          task("Generating word cloud, patience please...") do
-            cloud = MagicCloud::Cloud.new(word_list.word_list,
-              :rotate  => :none,
-              :palette => option_setting("PALETTE").split(" ").map(&:strip)
-            ).draw(option_setting("IMAGE_WIDTH").to_i, option_setting("IMAGE_HEIGHT").to_i).to_blob { self.format = "png" }
-            File.open(option_setting("DEST"), "wb") { |f| f.write(cloud) }
+          task("Writing #{pluralize(word_list.word_list.length, 'word', 'words')} to file...") do
+            File.open(option_setting("DEST"), "w") do |f|
+              word_list.word_list.each do |word_and_count|
+                word, count = word_and_count
+                if option_setting("INCLUDE_COUNT")
+                  f.puts("#{word}, #{count}")
+                else
+                  f.puts(word)
+                end
+              end
+            end
           end
-          info("Word cloud written to #{option_setting('DEST').bold}")
+          file_size = number_to_human_size(File.size(option_setting("DEST")))
+          info("Wrote #{file_size.bold} to #{option_setting('DEST').bold}")
         end
       end
     end
