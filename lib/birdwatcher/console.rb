@@ -162,9 +162,17 @@ module Birdwatcher
       task "Preparing database...", true do
         Sequel.extension :migration, :core_extensions
         @database = Sequel.connect(configuration.get!(:database_connection_uri))
-        Sequel::Migrator.run(@database, DB_MIGRATIONS_PATH)
+        begin
+          Sequel::Migrator.run(@database, DB_MIGRATIONS_PATH)
+        rescue Sequel::DatabaseConnectionError
+          fail_state = true;
+        end
         Sequel::Model.db = @database
         Sequel::Model.plugin :timestamps
+        if fail_state == true
+          puts ''
+          puts 'config error'.colorize(:light_red) + ' Please edit the ~/.birdwatcherrc file with correct information, or delete the file entirely, then run birdwatcher again.'
+        end
         bootstrap_models!
         load_default_workspace!
       end
