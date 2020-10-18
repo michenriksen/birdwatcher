@@ -1,6 +1,6 @@
 # Birdwatcher
 
-[Birdwatcher](https://github.com/michenriksen/birdwatcher) is a data analysis and OSINT framework for Twitter. Birdwatcher supports creating multiple workspaces where arbitrary Twitter users can be added and their Tweets harvested through the Twitter API for offline storage and analysis. Birdwatcher comes with several modules which can be envoked to further enrich collected data or work with it, e.g. Retrieving user's Klout score, generating social graphs between users and weighted word clouds based on their Tweets.
+[Birdwatcher](https://github.com/michenriksen/birdwatcher) is a data analysis and OSINT framework for Twitter. Birdwatcher supports creating multiple workspaces where arbitrary Twitter users can be added and their Tweets harvested through the Twitter API for offline storage and analysis. Birdwatcher comes with several modules which can be invoked to further enrich collected data or work with it, e.g. Retrieving user's Klout score, generating social graphs between users and weighted word clouds based on their Tweets.
 
 ![Birdwatcher commands](img/birdwatcher_help.png)
 
@@ -44,7 +44,7 @@ Finally with all the dependencies in place, Birdwatcher can now be installed wit
 
     $ gem install birdwatcher
 
-This will download and set up Birdwatcher and install all its code depencies.
+This will download and set up Birdwatcher and install all its code dependencies.
 
 ## Configuration
 
